@@ -22,6 +22,9 @@ pub struct Muliphain {
     pub buffer: *mut u32,
     pub windows: Vec<Window>,
     pub mouse_radius: i32,
+    pub dragging: bool,
+    pub drag_window_id: Option<u32>,
+    pub drag_offset: (i32, i32),
 }
 
 pub fn initialize(width: usize, height: usize, windows: Vec<Window>) -> Muliphain {
@@ -41,6 +44,9 @@ pub fn initialize(width: usize, height: usize, windows: Vec<Window>) -> Muliphai
         buffer,
         windows,
         mouse_radius: 8,
+        dragging: false,
+        drag_window_id: None,
+        drag_offset: (0, 0),
     }
 }
 
@@ -92,6 +98,37 @@ impl Muliphain {
                     }
                 }
             }
+        }
+    }
+
+    pub fn handle_mouse(&mut self, mouse: Mouse) {
+        if mouse.button == 1 {
+            if !self.dragging {
+                for i in (0..self.windows.len()).rev() {
+                    let window = &self.windows[i];
+                    if mouse.x >= window.x
+                        && mouse.x < window.x + window.width
+                        && mouse.y >= window.y
+                        && mouse.y < window.y + 30
+                    {
+                        self.dragging = true;
+                        self.drag_window_id = Some(window.id);
+                        self.drag_offset = (mouse.x - window.x, mouse.y - window.y);
+
+                        let window = self.windows.remove(i);
+                        self.windows.push(window);
+                        break;
+                    }
+                }
+            } else if let Some(id) = self.drag_window_id {
+                if let Some(window) = self.windows.iter_mut().find(|w| w.id == id) {
+                    window.x = mouse.x - self.drag_offset.0;
+                    window.y = mouse.y - self.drag_offset.1;
+                }
+            }
+        } else {
+            self.dragging = false;
+            self.drag_window_id = None;
         }
     }
 

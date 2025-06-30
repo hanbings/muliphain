@@ -32,17 +32,23 @@ fn decode_image() -> Vec<u32> {
 fn main() {
     let mut muliphain = muliphain::initialize(WIDTH, HEIGHT, vec![]);
 
-    let bg_buffer = muliphain.add_window(0, 0, WIDTH as i32, HEIGHT as i32);
+    let background_buffer = muliphain.add_window(0, 0, WIDTH as i32, HEIGHT as i32);
     let background = decode_image();
-    let window_buffer = unsafe { std::slice::from_raw_parts_mut(bg_buffer, WIDTH * HEIGHT) };
+    let window_buffer =
+        unsafe { std::slice::from_raw_parts_mut(background_buffer, WIDTH * HEIGHT) };
     window_buffer.copy_from_slice(&background);
 
-    let window_buffer = muliphain.add_window(100, 100, 400, 300);
-    let window_buffer = unsafe { std::slice::from_raw_parts_mut(window_buffer, 400 * 300) };
-    for y in 0..300 {
-        for x in 0..400 {
-            let idx = (y * 400 + x) as usize;
-            window_buffer[idx] = 0xffffffff;
+    let windows = [
+        (100, 100, 400, 300, 0xfff6e299),
+        (200, 200, 400, 300, 0xff408deb),
+        (300, 300, 400, 300, 0xff1d325a),
+    ];
+
+    for &(x, y, w, h, color) in &windows {
+        let buffer_ptr = muliphain.add_window(x, y, w, h);
+        let buffer = unsafe { std::slice::from_raw_parts_mut(buffer_ptr, (w * h) as usize) };
+        for pixel in buffer.iter_mut() {
+            *pixel = color;
         }
     }
 
@@ -75,7 +81,8 @@ fn main() {
             },
         };
 
-        muliphain.render(mouse);
+        muliphain.handle_mouse(mouse.clone());
+        muliphain.render(mouse.clone());
         window
             .update_with_buffer(
                 unsafe { std::slice::from_raw_parts(muliphain.buffer, WIDTH * HEIGHT) },
