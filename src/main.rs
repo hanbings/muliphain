@@ -6,7 +6,7 @@ use std::time::{Duration, Instant};
 
 const WIDTH: usize = 1280;
 const HEIGHT: usize = 720;
-const IMG_BYTES: &[u8] = include_bytes!("../ba7823c2-95c2-44f4-96c0-e40734fa3cb2.jpg");
+const IMG_BYTES: &[u8] = include_bytes!("../canicula.png");
 
 fn decode_image() -> Vec<u32> {
     let img = ImageReader::new(Cursor::new(IMG_BYTES))
